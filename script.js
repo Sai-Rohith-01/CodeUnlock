@@ -1,142 +1,160 @@
-// Grab elements
-const input = document.getElementById("codeInput");
-const button = document.getElementById("unlockBtn");
-const lockScreen = document.getElementById("lock-screen");
-const bannerScreen = document.getElementById("banner-screen");
-const logo = document.getElementById("collegeLogo");
+// DOM refs
+const unlockBtn = document.getElementById("unlockBtn");
+const codeInput = document.getElementById("codeInput");
+const grantedSound = document.getElementById("grantedSound");
+const deniedSound = document.getElementById("deniedSound");
+const sparkContainer = document.getElementById("sparkContainer");
+const bannerWrap = document.getElementById("bannerWrap");
 
-// Unlock function
+// ===== Unlock flow (1s delay so sound can play) =====
 function unlock() {
-  const code = input.value.trim().toUpperCase();
+  if (codeInput.value.trim().toUpperCase() === "OPEN") {
+    if (grantedSound) grantedSound.play();
 
-  // Clear input immediately
-  input.value = "";
+    // wait 1s so user hears the sound before transition
+    setTimeout(() => {
+      // hide lock screen
+      document.getElementById("lock-screen").classList.remove("active");
 
-  if (code === "OPEN") {
-    let grantedAudio = new Audio("granted.mp3");
-    grantedAudio.play();
+      // show club logo briefly
+      const clubScreen = document.getElementById("club-logo-screen");
+      clubScreen.classList.add("active");
+      const clubLogo = document.getElementById("clubLogo");
+      setTimeout(() => clubLogo.classList.add("show"), 500);
 
-    grantedAudio.onended = () => {
+      // confetti
       setTimeout(() => {
-        lockScreen.classList.add("fade-out");
-        setTimeout(() => {
-          lockScreen.style.display = "none";
-          bannerScreen.style.display = "flex";
-          bannerScreen.classList.add("fade-in");
+        if (typeof confetti === "function") confetti({ particleCount: 120, spread: 90, origin: { y: 0.6 } });
+      }, 700);
 
-          launchConfetti();
-          glowBurst();
-        }, 800);
-      }, 500);
-    };
+      // to banner
+      setTimeout(() => {
+        clubScreen.classList.remove("active");
+        const bannerScreen = document.getElementById("banner-screen");
+        bannerScreen.classList.add("active");
+
+        setTimeout(() => {
+          document.getElementById("bannerImg").classList.add("show");
+
+          // apply StarWars-style crawl one-shot
+          if (bannerWrap) {
+            bannerWrap.classList.add("crawl");
+            // remove crawl after animation ends so it can run again next time
+            setTimeout(() => bannerWrap.classList.remove("crawl"), 7000);
+          }
+
+          // final neon orbs
+          let c = 0;
+          const iv = setInterval(() => {
+            spawnOrb();
+            if (++c > 40) clearInterval(iv);
+          }, 80);
+        }, 300);
+      }, 3500);
+    }, 1000);
 
   } else {
-    let deniedAudio = new Audio("denied.mp3");
-    deniedAudio.play();
-
-    // shake effect on wrong input
-    lockScreen.classList.add("shake");
-    setTimeout(() => lockScreen.classList.remove("shake"), 500);
+    // wrong code
+    if (deniedSound) { deniedSound.currentTime = 0; deniedSound.play(); }
+    codeInput.value = "";
+    codeInput.classList.add("shake");
+    setTimeout(() => codeInput.classList.remove("shake"), 900);
   }
 }
 
-// Glow burst effect
-function glowBurst() {
-  let burst = document.createElement("div");
-  burst.classList.add("glow-burst");
-  document.body.appendChild(burst);
+// events
+unlockBtn.addEventListener("click", unlock);
+codeInput.addEventListener("keypress", (e) => { if (e.key === "Enter") unlock(); });
+
+// ===== Sparks (continuous, lightweight) =====
+function spawnSpark() {
+  const s = document.createElement("div");
+  s.className = "spark";
+  const startX = Math.random() * innerWidth;
+  const startY = Math.random() * innerHeight;
+  const moveX = (Math.random() - 0.5) * 220;
+  const moveY = -Math.random() * 200;
+  const dur = 1.8 + Math.random() * 2.2;
+
+  const colors = ["#00f7ff","#ff44cc","#9d4dff","#ffffff","#ff66ff"];
+  const color = colors[(Math.random() * colors.length) | 0];
+  s.style.background = color;
+  s.style.boxShadow = `0 0 6px ${color}, 0 0 12px ${color}`;
+  s.style.left = `${startX}px`;
+  s.style.top = `${startY}px`;
+  s.style.setProperty('--startX', `${startX}px`);
+  s.style.setProperty('--startY', `${startY}px`);
+  s.style.setProperty('--moveX', `${moveX}px`);
+  s.style.setProperty('--moveY', `${moveY}px`);
+  s.style.animationDuration = `${dur}s`;
+
+  sparkContainer.appendChild(s);
 
   setTimeout(() => {
-    burst.remove();
-  }, 1000);
+    s.remove();
+    spawnSpark();
+  }, dur * 1000);
+}
+for (let i=0;i<110;i++) setTimeout(spawnSpark, i * 70);
+
+// ===== Neon orbs (blinking + rising) =====
+function spawnOrb() {
+  const o = document.createElement("div");
+  o.className = "neon-orb";
+  const size = 8 + Math.random() * 28;
+  o.style.width = o.style.height = `${size}px`;
+  o.style.left = `${Math.random() * innerWidth}px`;
+  o.style.bottom = `-40px`;
+
+  const colors = ["#00f7ff","#ff44cc","#9d4dff","#ffffff","#ff66ff"];
+  const color = colors[(Math.random() * colors.length) | 0];
+  o.style.background = color;
+  o.style.boxShadow = `0 0 14px ${color}, 0 0 28px ${color}`;
+
+  const dur = 3.5 + Math.random() * 2.5;
+  // set two animations: rise (one-shot) and orbBlink (looping)
+  const blinkDur = (2.2 + Math.random() * 1.6).toFixed(2);
+  o.style.animation = `rise ${dur}s linear forwards, orbBlink ${blinkDur}s ease-in-out infinite`;
+
+  document.body.appendChild(o);
+  setTimeout(() => o.remove(), dur * 1000);
 }
 
-// Confetti effect
-function launchConfetti() {
-  const duration = 3 * 1000;
-  const end = Date.now() + duration;
+// ===== Nebula particles (continuous, gentle) =====
+(function initNebula() {
+  const nebula = document.getElementById("nebula");
+  function spawnParticle() {
+    const p = document.createElement("div");
+    p.className = "particle";
+    const size = 1 + Math.random() * 3;
+    p.style.width = p.style.height = `${size}px`;
+    p.style.left = `${Math.random() * 100}vw`;
+    p.style.top = `${Math.random() * 100}vh`;
+    p.style.opacity = (0.25 + Math.random() * 0.55).toFixed(2);
 
-  (function frame() {
-    const colors = ['#00f7ff', '#ff44cc', '#ffff44', '#44ff88'];
-    confetti({
-      particleCount: 5,
-      angle: 60,
-      spread: 55,
-      origin: { x: 0 },
-      colors: colors
-    });
-    confetti({
-      particleCount: 5,
-      angle: 120,
-      spread: 55,
-      origin: { x: 1 },
-      colors: colors
-    });
-    if (Date.now() < end) {
-      requestAnimationFrame(frame);
-    }
-  })();
-}
+    const hues = ["#ffffff","#a7e9ff","#ffc8ff","#ffb3b3"];
+    p.style.background = hues[(Math.random() * hues.length) | 0];
 
-// Button click + Enter key
-button.addEventListener("click", unlock);
-input.addEventListener("keypress", function (e) {
-  if (e.key === "Enter") unlock();
+    const dur = 12 + Math.random() * 26;
+    const delay = Math.random() * 8;
+    p.style.animation = `pulse ${dur}s ease-in-out ${delay}s infinite alternate`;
+
+    nebula.appendChild(p);
+    setTimeout(() => { if (p.parentNode) p.remove(); }, (dur + delay + 2) * 1000);
+  }
+
+  // small initial burst + continuous spawning
+  for (let i=0;i<40;i++) setTimeout(spawnParticle, i*60);
+  setInterval(spawnParticle, 420);
+})();
+
+// ===== Logo flip (click only) with single-shot shimmering =====
+const logoCard = document.getElementById("logoCard");
+logoCard.addEventListener("click", () => {
+  // toggle state (only click toggles)
+  logoCard.classList.toggle("flipped");
+
+  // one-shot shimmer
+  logoCard.classList.add("flipping");
+  setTimeout(() => logoCard.classList.remove("flipping"), 900);
 });
-
-// Sparks background animation
-const canvas = document.getElementById("sparks");
-const ctx = canvas.getContext("2d");
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
-let sparks = [];
-for (let i = 0; i < 80; i++) {
-  sparks.push({
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height,
-    dx: (Math.random() - 0.5) * 1,
-    dy: (Math.random() - 0.5) * 1,
-    size: Math.random() * 2 + 1,
-    color: `hsl(${Math.random() * 60 + 180}, 100%, 60%)`
-  });
-}
-
-function animateSparks() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  sparks.forEach(spark => {
-    ctx.beginPath();
-    ctx.arc(spark.x, spark.y, spark.size, 0, Math.PI * 2);
-    ctx.fillStyle = spark.color;
-    ctx.fill();
-
-    spark.x += spark.dx;
-    spark.y += spark.dy;
-
-    // bounce from edges
-    if (spark.x < 0 || spark.x > canvas.width) spark.dx *= -1;
-    if (spark.y < 0 || spark.y > canvas.height) spark.dy *= -1;
-  });
-  requestAnimationFrame(animateSparks);
-}
-animateSparks();
-
-// Resize handler
-window.addEventListener("resize", () => {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-});
-
-// Logo hover effect (zoom + glow)
-if (logo) {
-  logo.addEventListener("mouseover", () => {
-    logo.style.transform = "scale(1.1)";
-    logo.style.filter = "drop-shadow(0 0 20px white)";
-    logo.style.transition = "all 0.3s ease";
-  });
-
-  logo.addEventListener("mouseout", () => {
-    logo.style.transform = "scale(1)";
-    logo.style.filter = "none";
-  });
-}

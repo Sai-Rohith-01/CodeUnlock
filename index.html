@@ -1,30 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Inauguration Unlock</title>
-  <!-- Futuristic Font -->
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- Background effects -->
+  <div id="nebula"></div>
+  <div id="sparkContainer"></div>
 
   <!-- Lock Screen -->
-  <div id="lock-screen">
-    <img src="Logo.png" alt="College Logo" class="logo">
+  <div id="lock-screen" class="screen active">
+    <div class="logo-container">
+      <div class="logo-card" id="logoCard" role="button" aria-label="Flip logo">
+        <div class="logo-face logo-front">
+          <img src="Logo.png" alt="College Logo">
+        </div>
+        <div class="logo-face logo-back">
+          <img src="club.jpg" alt="Club Logo">
+        </div>
+      </div>
+    </div>
+
     <h1 class="title">Enter Unlock Code</h1>
-    <input type="text" id="codeInput" placeholder="Type code...">
-    <button id="unlockBtn">Unlock</button>
-    <p id="message"></p>
+
+    <div class="input-container">
+      <input id="codeInput" type="text" placeholder="Type code..." autocomplete="off" />
+      <button id="unlockBtn">Unlock</button>
+    </div>
+  </div>
+
+  <!-- Club Logo Screen -->
+  <div id="club-logo-screen" class="screen">
+    <img src="club.jpg" id="clubLogo" class="club-logo" alt="Club Logo">
   </div>
 
   <!-- Banner Screen -->
-  <div id="banner-screen" style="display: none;">
-    <img src="Ironman.png" alt="Event Poster" class="banner-img">
+  <div id="banner-screen" class="screen">
+    <div class="banner-wrap" id="bannerWrap">
+      <img src="Ironman.png" id="bannerImg" class="banner-img" alt="Event Poster">
+    </div>
   </div>
 
-  <!-- Scripts -->
+  <!-- Sounds -->
+  <audio id="grantedSound" src="granted.mp3"></audio>
+  <audio id="deniedSound" src="denied.mp3"></audio>
+
+  <!-- libs + script -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <script src="script.js"></script>
 </body>
