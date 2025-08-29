@@ -1,0 +1,182 @@
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Orbitron', sans-serif;
+  }
+  
+  body {
+    background: radial-gradient(circle at top, #0a0f1e, #02050a);
+    color: #fff;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+  }
+  
+  /* Sparks Animation in Background */
+  body::before {
+    content: "";
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    background: url("https://i.ibb.co/6bsW0dp/sparks.gif") repeat;
+    background-size: cover;
+    opacity: 0.15;
+    z-index: -1;
+    animation: moveSparks 40s linear infinite;
+  }
+  
+  @keyframes moveSparks {
+    from { transform: translate(0, 0); }
+    to { transform: translate(-200px, -200px); }
+  }
+  
+  /* Lock Screen Container */
+  #lock-screen {
+    text-align: center;
+    background: rgba(0, 10, 30, 0.7);
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+    width: 380px;
+    animation: fadeIn 1.2s ease-in-out;
+  }
+  
+  .title {
+    font-size: 1.8em;
+    margin-bottom: 20px;
+    color: #00eaff;
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px #00eaff, 0 0 20px #0077ff;
+  }
+  
+  /* College Logo */
+  #college-logo {
+    width: 90px;
+    margin-bottom: 20px;
+    border-radius: 50%;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 0 20px 4px white;
+  }
+  
+  #college-logo:hover {
+    transform: scale(1.15);
+    box-shadow: 0 0 35px 8px white;
+  }
+  
+  /* Input + Button */
+  #codeInput {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    border: 2px solid #00eaff;
+    border-radius: 8px;
+    font-size: 1.1em;
+    background: black;
+    color: #00eaff;
+    outline: none;
+    transition: 0.3s;
+    text-align: center;
+  }
+  
+  #codeInput:focus {
+    border-color: #00ffcc;
+    box-shadow: 0 0 10px #00ffcc;
+  }
+  
+  #unlockBtn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1em;
+    cursor: pointer;
+    background: linear-gradient(90deg, #00eaff, #0077ff);
+    color: black;
+    font-weight: bold;
+    transition: all 0.3s ease;
+  }
+  
+  #unlockBtn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 15px #00eaff;
+  }
+  
+  /* Shake Effect if Wrong Code */
+  .shake {
+    animation: shake 0.3s ease-in-out 2;
+    border-color: red !important;
+    box-shadow: 0 0 15px red !important;
+  }
+  
+  @keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+    75% { transform: translateX(-5px); }
+    100% { transform: translateX(0); }
+  }
+  
+  /* Success Glow */
+  .success {
+    border-color: #00ff99 !important;
+    box-shadow: 0 0 20px #00ff99 !important;
+    animation: glow 1s ease forwards;
+  }
+  
+  @keyframes glow {
+    0% { box-shadow: 0 0 5px #00ff99; }
+    100% { box-shadow: 0 0 25px #00ff99, 0 0 50px #00ff99; }
+  }
+  
+  /* Banner Screen */
+  #banner-screen {
+    display: none;
+    text-align: center;
+  }
+  
+  .banner-img {
+    width: 80%;
+    max-width: 700px;
+    border-radius: 15px;
+    box-shadow: 0 0 40px rgba(0, 234, 255, 0.6);
+    animation: fadeIn 1.5s ease-in-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+  }
+/* Shake effect */
+.shake {
+    animation: shake 0.4s;
+  }
+  @keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    50% { transform: translateX(10px); }
+    75% { transform: translateX(-10px); }
+    100% { transform: translateX(0); }
+  }
+  
+  /* Glow burst */
+  .glow-burst {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 70%);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    animation: burstAnim 1s forwards;
+  }
+  @keyframes burstAnim {
+    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+  }
+    
