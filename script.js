@@ -1,4 +1,4 @@
-// DOM refs
+// ===== DOM refs =====
 const unlockBtn = document.getElementById("unlockBtn");
 const codeInput = document.getElementById("codeInput");
 const grantedSound = document.getElementById("grantedSound");
@@ -6,67 +6,79 @@ const deniedSound = document.getElementById("deniedSound");
 const sparkContainer = document.getElementById("sparkContainer");
 const bannerWrap = document.getElementById("bannerWrap");
 
-// ===== Unlock flow (1s delay so sound can play) =====
+const lockScreen = document.getElementById("lock-screen");
+const textScreen = document.getElementById("text-screen");
+const bannerScreen = document.getElementById("banner-screen");
+
+// ===== Unlock flow =====
 function unlock() {
   if (codeInput.value.trim().toUpperCase() === "OPEN") {
     if (grantedSound) grantedSound.play();
 
-    // wait 1s so user hears the sound before transition
+    // hide lock screen
+    lockScreen.classList.remove("active");
+
+    // confetti
     setTimeout(() => {
-      // hide lock screen
-      document.getElementById("lock-screen").classList.remove("active");
+      if (typeof confetti === "function") {
+        confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+      }
+    }, 700);
 
-      // show club logo briefly
-      const clubScreen = document.getElementById("club-logo-screen");
-      clubScreen.classList.add("active");
-      const clubLogo = document.getElementById("clubLogo");
-      setTimeout(() => clubLogo.classList.add("show"), 500);
+    // show presentation screen
+    textScreen.classList.add("active");
 
-      // confetti
+    // clear any old text
+    textScreen.innerHTML = "";
+    const presentationText = document.createElement("div");
+    presentationText.id = "presentationText";
+    presentationText.textContent = "Department of Computer Science Presents";
+
+    // 🔹 Choose your animation style here
+    const chosenEffect = "zoom-dissolve";  
+    // Options: "fade-in-out", "typewriter", "star-wars", "lens-flare", "zoom-dissolve"
+
+    presentationText.classList.add(chosenEffect);
+    textScreen.appendChild(presentationText);
+
+    // after 6s → move to banner
+    setTimeout(() => {
+      textScreen.classList.remove("active");
+      bannerScreen.classList.add("active");
+
+      // banner entry
       setTimeout(() => {
-        if (typeof confetti === "function") confetti({ particleCount: 120, spread: 90, origin: { y: 0.6 } });
-      }, 700);
+        document.getElementById("bannerImg").classList.add("show");
 
-      // to banner
-      setTimeout(() => {
-        clubScreen.classList.remove("active");
-        const bannerScreen = document.getElementById("banner-screen");
-        bannerScreen.classList.add("active");
+        // shimmer + orbs
+        if (bannerWrap) {
+          bannerWrap.classList.add("crawl");
+          setTimeout(() => bannerWrap.classList.remove("crawl"), 7000);
+        }
 
-        setTimeout(() => {
-          document.getElementById("bannerImg").classList.add("show");
-
-          // apply StarWars-style crawl one-shot
-          if (bannerWrap) {
-            bannerWrap.classList.add("crawl");
-            // remove crawl after animation ends so it can run again next time
-            setTimeout(() => bannerWrap.classList.remove("crawl"), 7000);
-          }
-
-          // final neon orbs
-          let c = 0;
-          const iv = setInterval(() => {
-            spawnOrb();
-            if (++c > 40) clearInterval(iv);
-          }, 80);
-        }, 300);
-      }, 3500);
-    }, 1000);
+        let c = 0;
+        const iv = setInterval(() => {
+          spawnOrb();
+          if (++c > 40) clearInterval(iv);
+        }, 80);
+      }, 300);
+    }, 6000);
 
   } else {
-    // wrong code
-    if (deniedSound) { deniedSound.currentTime = 0; deniedSound.play(); }
+    if (deniedSound) {
+      deniedSound.currentTime = 0;
+      deniedSound.play();
+    }
     codeInput.value = "";
     codeInput.classList.add("shake");
     setTimeout(() => codeInput.classList.remove("shake"), 900);
   }
 }
 
-// events
 unlockBtn.addEventListener("click", unlock);
 codeInput.addEventListener("keypress", (e) => { if (e.key === "Enter") unlock(); });
 
-// ===== Sparks (continuous, lightweight) =====
+// ===== Sparks =====
 function spawnSpark() {
   const s = document.createElement("div");
   s.className = "spark";
@@ -82,26 +94,18 @@ function spawnSpark() {
   s.style.boxShadow = `0 0 6px ${color}, 0 0 12px ${color}`;
   s.style.left = `${startX}px`;
   s.style.top = `${startY}px`;
-  s.style.setProperty('--startX', `${startX}px`);
-  s.style.setProperty('--startY', `${startY}px`);
-  s.style.setProperty('--moveX', `${moveX}px`);
-  s.style.setProperty('--moveY', `${moveY}px`);
   s.style.animationDuration = `${dur}s`;
 
   sparkContainer.appendChild(s);
-
-  setTimeout(() => {
-    s.remove();
-    spawnSpark();
-  }, dur * 1000);
+  setTimeout(() => { s.remove(); spawnSpark(); }, dur * 1000);
 }
-for (let i=0;i<110;i++) setTimeout(spawnSpark, i * 70);
+for (let i=0;i<120;i++) setTimeout(spawnSpark, i * 70);
 
-// ===== Neon orbs (blinking + rising) =====
+// ===== Orbs =====
 function spawnOrb() {
   const o = document.createElement("div");
   o.className = "neon-orb";
-  const size = 8 + Math.random() * 28;
+  const size = 10 + Math.random() * 30;
   o.style.width = o.style.height = `${size}px`;
   o.style.left = `${Math.random() * innerWidth}px`;
   o.style.bottom = `-40px`;
@@ -111,8 +115,7 @@ function spawnOrb() {
   o.style.background = color;
   o.style.boxShadow = `0 0 14px ${color}, 0 0 28px ${color}`;
 
-  const dur = 3.5 + Math.random() * 2.5;
-  // set two animations: rise (one-shot) and orbBlink (looping)
+  const dur = 4 + Math.random() * 2.5;
   const blinkDur = (2.2 + Math.random() * 1.6).toFixed(2);
   o.style.animation = `rise ${dur}s linear forwards, orbBlink ${blinkDur}s ease-in-out infinite`;
 
@@ -120,13 +123,13 @@ function spawnOrb() {
   setTimeout(() => o.remove(), dur * 1000);
 }
 
-// ===== Nebula particles (continuous, gentle) =====
+// ===== Nebula =====
 (function initNebula() {
   const nebula = document.getElementById("nebula");
   function spawnParticle() {
     const p = document.createElement("div");
     p.className = "particle";
-    const size = 1 + Math.random() * 3;
+    const size = 2 + Math.random() * 4;
     p.style.width = p.style.height = `${size}px`;
     p.style.left = `${Math.random() * 100}vw`;
     p.style.top = `${Math.random() * 100}vh`;
@@ -135,7 +138,7 @@ function spawnOrb() {
     const hues = ["#ffffff","#a7e9ff","#ffc8ff","#ffb3b3"];
     p.style.background = hues[(Math.random() * hues.length) | 0];
 
-    const dur = 12 + Math.random() * 26;
+    const dur = 14 + Math.random() * 26;
     const delay = Math.random() * 8;
     p.style.animation = `pulse ${dur}s ease-in-out ${delay}s infinite alternate`;
 
@@ -143,18 +146,14 @@ function spawnOrb() {
     setTimeout(() => { if (p.parentNode) p.remove(); }, (dur + delay + 2) * 1000);
   }
 
-  // small initial burst + continuous spawning
-  for (let i=0;i<40;i++) setTimeout(spawnParticle, i*60);
-  setInterval(spawnParticle, 420);
+  for (let i=0;i<60;i++) setTimeout(spawnParticle, i*60);
+  setInterval(spawnParticle, 350);
 })();
 
-// ===== Logo flip (click only) with single-shot shimmering =====
+// ===== Logo flip (unchanged) =====
 const logoCard = document.getElementById("logoCard");
 logoCard.addEventListener("click", () => {
-  // toggle state (only click toggles)
   logoCard.classList.toggle("flipped");
-
-  // one-shot shimmer
   logoCard.classList.add("flipping");
   setTimeout(() => logoCard.classList.remove("flipping"), 900);
 });

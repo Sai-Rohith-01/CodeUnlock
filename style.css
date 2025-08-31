@@ -2,10 +2,19 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html,body { height: 100%; }
 body {
-  font-family: 'Orbitron', sans-serif;
+  font-family: 'Audiowide', sans-serif;
   background: #000;
   color: #fff;
   overflow: hidden;
+}
+.title, .presentation-text, .banner-text {
+  font-family: 'Audiowide', sans-serif;
+  color: #fff;
+  text-shadow: 
+    0 0 10px blue,
+    0 0 20px blue,
+    0 0 30px blue,
+    0 0 40px blue;
 }
 
 /* ===== Screens ===== */
@@ -133,17 +142,6 @@ body {
 }
 @keyframes logoShimmer { 100% { left: 140%; opacity: 0; } }
 
-/* ===== Club logo screen ===== */
-.club-logo {
-  width: 220px;
-  height: 220px;
-  border-radius: 50%;
-  object-fit: cover;
-  transition: transform .6s, opacity .9s;
-  opacity: 0; transform: scale(.92);
-}
-.club-logo.show { opacity: 1; transform: scale(1); box-shadow: 0 0 22px rgba(0,255,255,0.12); }
-
 /* ===== Banner (Star Wars intro + shimmer hover) ===== */
 .banner-wrap {
   position: relative;
@@ -169,8 +167,6 @@ body {
   50% { opacity: 0.7; }
   100% { opacity: 1; transform: scale(1) rotateX(0) translateY(0); }
 }
-
-/* shimmer on hover */
 .banner-wrap::after {
   content: "";
   position: absolute;
@@ -179,22 +175,161 @@ body {
   background: linear-gradient(120deg, transparent, rgba(255,255,255,0.6), transparent);
   transform: skewX(-25deg);
 }
-.banner-wrap:hover::after {
-  animation: banner-shimmer 1.5s forwards;
-}
-.banner-wrap:hover .banner-img {
-  transform: scale(1.05);
-}
+.banner-wrap:hover::after { animation: banner-shimmer 1.5s forwards; }
+.banner-wrap:hover .banner-img { transform: scale(1.05); }
 @keyframes banner-shimmer {
   0% { left: -100%; }
   100% { left: 120%; }
 }
 
-/* ===== Nebula / Sparks / Orbs (keep your effects) ===== */
+/* ===== Presentation Text Screen ===== */
+#presentationText {
+  font-size: 2.3rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 0 16px rgba(0,247,255,0.65), 0 0 30px rgba(255,68,204,0.45);
+  text-align: center;
+  max-width: 90%;
+}
+
+/* === Animation Variants === */
+.fade-in-out {
+  animation: fadeInOut 5s ease forwards;
+}
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: scale(0.9); }
+  20% { opacity: 1; transform: scale(1); }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.05); }
+}
+
+.typewriter {
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 3px solid cyan;
+  width: 0;
+  animation: typing 3s steps(40,end) forwards, blink 0.75s step-end infinite, fadeOut 1s ease 4s forwards;
+}
+@keyframes typing { to { width: 100%; } }
+@keyframes blink { 50% { border-color: transparent; } }
+@keyframes fadeOut { to { opacity: 0; } }
+
+.star-wars {
+  animation: starwarsText 6s ease forwards;
+}
+@keyframes starwarsText {
+  0% { opacity: 0; transform: scale(1.6) translateY(100px); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: scale(0.8) translateY(-200px); }
+}
+
+.lens-flare {
+  position: relative;
+  animation: flareFade 5s ease forwards;
+}
+.lens-flare::after {
+  content: "";
+  position: absolute;
+  top: 50%; left: -50%;
+  width: 200%; height: 120%;
+  background: linear-gradient(120deg, transparent, rgba(255,255,255,0.9), transparent);
+  transform: skewX(-20deg);
+  animation: lensMove 5s linear forwards;
+}
+@keyframes lensMove { 100% { left: 100%; } }
+@keyframes flareFade { 0%{opacity:0;}20%{opacity:1;}80%{opacity:1;}100%{opacity:0;} }
+
+.zoom-dissolve {
+  animation: zoomOut 5s ease forwards;
+}
+@keyframes zoomOut {
+  0% { opacity: 0; transform: scale(0.6); }
+  20% { opacity: 1; transform: scale(1); }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.6); }
+}
+
+/* ===== Nebula / Sparks / Orbs ===== */
 .spark { position:absolute; width:4px; height:4px; border-radius:50%; pointer-events:none; }
 .neon-orb { position:absolute; border-radius:50%; pointer-events:none; }
-@keyframes orbBlink { 0%,100% { opacity: 0.25; transform: scale(0.8);} 50% { opacity:1; transform:scale(1.08);} }
+@keyframes orbBlink { 0%,100%{opacity:0.25; transform:scale(0.8);} 50%{opacity:1; transform:scale(1.08);} }
 .particle { position:absolute; border-radius:50%; pointer-events:none; }
 @keyframes pulse { from{transform:scale(1);opacity:0.6} to{transform:scale(1.8);opacity:0.08} }
+
 .shake { animation: shake 0.42s ease; border-color: #ff4444!important; box-shadow: 0 0 8px rgba(255,68,68,0.45)!important; }
-@keyframes shake { 0%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}100%{transform:translateX(0)} }
+@keyframes shake { 
+  0%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}
+  60%{transform:translateX(-4px)}80%{transform:translateX(4px)}100%{transform:translateX(0)}
+}
+
+/* White Center Spotlight */
+.spotlight-center {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 255, 255, 0.35) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 80%
+  );
+  transform: translateX(-50%) rotate(0deg);
+  filter: blur(60px);
+  pointer-events: none;
+  animation: glowPulse 4s infinite alternate;
+  z-index: 1;
+}
+
+/* Left Gold Spotlight */
+.spotlight-left {
+  position: absolute;
+  bottom: 0;
+  left: -150px;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 215, 0, 0.25) 0%,
+    rgba(255, 215, 0, 0.05) 60%,
+    transparent 90%
+  );
+  transform: rotate(-20deg);
+  filter: blur(80px);
+  pointer-events: none;
+  animation: drift 6s infinite alternate;
+  z-index: 0;
+}
+
+/* Right Purple Spotlight */
+.spotlight-right {
+  position: absolute;
+  bottom: 0;
+  right: -150px;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(186, 85, 211, 0.25) 0%,
+    rgba(186, 85, 211, 0.05) 60%,
+    transparent 90%
+  );
+  transform: rotate(20deg);
+  filter: blur(80px);
+  pointer-events: none;
+  animation: drift 6s infinite alternate-reverse;
+  z-index: 0;
+}
+
+/* Animations */
+@keyframes glowPulse {
+  from { opacity: 0.7; transform: translateX(-50%) scale(1); }
+  to   { opacity: 1; transform: translateX(-50%) scale(1.1); }
+}
+
+@keyframes drift {
+  from { transform: scale(1) rotate(-20deg); }
+  to   { transform: scale(1.1) rotate(-25deg); }
+}
+
