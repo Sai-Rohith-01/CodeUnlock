@@ -4,66 +4,112 @@ const codeInput = document.getElementById("codeInput");
 const grantedSound = document.getElementById("grantedSound");
 const deniedSound = document.getElementById("deniedSound");
 const sparkContainer = document.getElementById("sparkContainer");
-const bannerWrap = document.getElementById("bannerWrap");
 
 const lockScreen = document.getElementById("lock-screen");
 const textScreen = document.getElementById("text-screen");
-const bannerScreen = document.getElementById("banner-screen");
+
+const presentationTextEl = document.getElementById("presentationText");
+const openTextEl = document.getElementById("openText");
+
+const dynamicSpotlight = document.getElementById("dynamicSpotlight");
+const spotlightCenter = document.querySelector(".spotlight-center");
+const spotlightLeft = document.querySelector(".spotlight-left");
+const spotlightRight = document.querySelector(".spotlight-right");
+
+// ===== Music =====
+const bgMusic = new Audio("background.mp3"); // pre-unlock
+bgMusic.loop = true;
+bgMusic.volume = 0.6;
+
+const openingMusic = new Audio("opening.mp3"); // plays once at unlock
+openingMusic.volume = 1.0;
+
+const postBgMusic = new Audio("after.mp3"); // after unlock
+postBgMusic.loop = true;
+postBgMusic.volume = 0.7;
+
+// Autoplay background music once user interacts (browser restriction workaround)
+document.addEventListener(
+  "click",
+  () => {
+    if (bgMusic.paused) bgMusic.play().catch(() => {});
+  },
+  { once: true }
+);
+
+// Fade out helper
+function fadeOut(audio, duration = 2000) {
+  if (!audio) return;
+  const step = audio.volume / (duration / 50);
+  const fadeInterval = setInterval(() => {
+    if (audio.volume > step) {
+      audio.volume -= step;
+    } else {
+      audio.volume = 0;
+      audio.pause();
+      clearInterval(fadeInterval);
+    }
+  }, 50);
+}
 
 // ===== Unlock flow =====
 function unlock() {
   if (codeInput.value.trim().toUpperCase() === "OPEN") {
     if (grantedSound) grantedSound.play();
 
-    // hide lock screen
+    // hide lock screen, show text screen
     lockScreen.classList.remove("active");
+    // Hide wave effect after unlock
+    const wave = document.getElementById("waveVisualizer");
+    if (wave) wave.classList.add("hidden");
 
-    // confetti
-    setTimeout(() => {
-      if (typeof confetti === "function") {
-        confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-      }
-    }, 700);
-
-    // show presentation screen
     textScreen.classList.add("active");
 
-    // clear any old text
-    textScreen.innerHTML = "";
-    const presentationText = document.createElement("div");
-    presentationText.id = "presentationText";
-    presentationText.textContent = "Department of Computer Science Presents";
+    const chosenEffect = "zoom-dissolve"; // options: fade-in-out, typewriter, star-wars, lens-flare, zoom-dissolve
 
-    // 🔹 Choose your animation style here
-    const chosenEffect = "zoom-dissolve";  
-    // Options: "fade-in-out", "typewriter", "star-wars", "lens-flare", "zoom-dissolve"
+    // reset effect classes
+    presentationTextEl.classList.remove(
+      "fade-in-out",
+      "typewriter",
+      "star-wars",
+      "lens-flare",
+      "zoom-dissolve",
+      "show"
+    );
+    openTextEl.classList.remove("show", "typewriter");
 
-    presentationText.classList.add(chosenEffect);
-    textScreen.appendChild(presentationText);
+    // apply effect to first line
+    presentationTextEl.classList.add(chosenEffect);
 
-    // after 6s → move to banner
+    // fade out bg music immediately on unlock
+    fadeOut(bgMusic, 2000);
+
+    // play opening music slightly after fade to sync with intro effect
     setTimeout(() => {
-      textScreen.classList.remove("active");
-      bannerScreen.classList.add("active");
+      openingMusic.currentTime = 0;
+      openingMusic.play().catch(() => {});
 
-      // banner entry
-      setTimeout(() => {
-        document.getElementById("bannerImg").classList.add("show");
+      // when opening ends → start post background
+      openingMusic.onended = () => {
+        postBgMusic.currentTime = 0;
+        postBgMusic.play().catch(() => {});
+      };
+    }, 1000);
 
-        // shimmer + orbs
-        if (bannerWrap) {
-          bannerWrap.classList.add("crawl");
-          setTimeout(() => bannerWrap.classList.remove("crawl"), 7000);
-        }
+    // after intro → show big OPEN text with spotlight
+    setTimeout(() => {
+      if (spotlightCenter) spotlightCenter.style.display = "none";
+      if (spotlightLeft) spotlightLeft.style.display = "none";
+      if (spotlightRight) spotlightRight.style.display = "none";
 
-        let c = 0;
-        const iv = setInterval(() => {
-          spawnOrb();
-          if (++c > 40) clearInterval(iv);
-        }, 80);
-      }, 300);
-    }, 6000);
+      openTextEl.classList.add("show", "glow-pulse");
 
+      if (typeof confetti === "function") {
+        confetti({ particleCount: 240, spread: 120, origin: { y: 0.6 } });
+      }
+
+      startSpotlightFollow();
+    }, 5200);
   } else {
     if (deniedSound) {
       deniedSound.currentTime = 0;
@@ -76,7 +122,40 @@ function unlock() {
 }
 
 unlockBtn.addEventListener("click", unlock);
-codeInput.addEventListener("keypress", (e) => { if (e.key === "Enter") unlock(); });
+codeInput.addEventListener("keypress", (e) => {
+  if (e.key === "Enter") unlock();
+});
+
+// ===== Spotlight follow logic =====
+let spotlightInterval = null;
+
+function moveSpotlightOnce() {
+  if (!openTextEl) return;
+  const rect = openTextEl.getBoundingClientRect();
+
+  const padX = rect.width * 0.1;
+  const padY = rect.height * 0.2;
+  const targetX = rect.left + padX + Math.random() * (rect.width - padX * 2);
+  const targetY = rect.top + padY + Math.random() * (rect.height - padY * 2);
+
+  const size = Math.max(280, Math.min(520, rect.width * 0.35));
+
+  // use transform for smoother hardware-accelerated motion
+  dynamicSpotlight.style.width = `${size}px`;
+  dynamicSpotlight.style.height = `${size}px`;
+  dynamicSpotlight.style.transform = `translate(${targetX - size / 2}px, ${
+    targetY - size / 2
+  }px)`;
+}
+
+function startSpotlightFollow() {
+  if (!dynamicSpotlight) return;
+  dynamicSpotlight.style.opacity = "1";
+  moveSpotlightOnce();
+  if (spotlightInterval) clearInterval(spotlightInterval);
+  spotlightInterval = setInterval(moveSpotlightOnce, 1600);
+  window.addEventListener("resize", moveSpotlightOnce);
+}
 
 // ===== Sparks =====
 function spawnSpark() {
@@ -84,11 +163,9 @@ function spawnSpark() {
   s.className = "spark";
   const startX = Math.random() * innerWidth;
   const startY = Math.random() * innerHeight;
-  const moveX = (Math.random() - 0.5) * 220;
-  const moveY = -Math.random() * 200;
   const dur = 1.8 + Math.random() * 2.2;
 
-  const colors = ["#00f7ff","#ff44cc","#9d4dff","#ffffff","#ff66ff"];
+  const colors = ["#00f7ff", "#ff44cc", "#9d4dff", "#ffffff", "#ff66ff"];
   const color = colors[(Math.random() * colors.length) | 0];
   s.style.background = color;
   s.style.boxShadow = `0 0 6px ${color}, 0 0 12px ${color}`;
@@ -97,9 +174,12 @@ function spawnSpark() {
   s.style.animationDuration = `${dur}s`;
 
   sparkContainer.appendChild(s);
-  setTimeout(() => { s.remove(); spawnSpark(); }, dur * 1000);
+  setTimeout(() => {
+    s.remove();
+    spawnSpark();
+  }, dur * 1000);
 }
-for (let i=0;i<120;i++) setTimeout(spawnSpark, i * 70);
+for (let i = 0; i < 120; i++) setTimeout(spawnSpark, i * 70);
 
 // ===== Orbs =====
 function spawnOrb() {
@@ -110,7 +190,7 @@ function spawnOrb() {
   o.style.left = `${Math.random() * innerWidth}px`;
   o.style.bottom = `-40px`;
 
-  const colors = ["#00f7ff","#ff44cc","#9d4dff","#ffffff","#ff66ff"];
+  const colors = ["#00f7ff", "#ff44cc", "#9d4dff", "#ffffff", "#ff66ff"];
   const color = colors[(Math.random() * colors.length) | 0];
   o.style.background = color;
   o.style.boxShadow = `0 0 14px ${color}, 0 0 28px ${color}`;
@@ -135,7 +215,7 @@ function spawnOrb() {
     p.style.top = `${Math.random() * 100}vh`;
     p.style.opacity = (0.25 + Math.random() * 0.55).toFixed(2);
 
-    const hues = ["#ffffff","#a7e9ff","#ffc8ff","#ffb3b3"];
+    const hues = ["#ffffff", "#a7e9ff", "#ffc8ff", "#ffb3b3"];
     p.style.background = hues[(Math.random() * hues.length) | 0];
 
     const dur = 14 + Math.random() * 26;
@@ -143,10 +223,12 @@ function spawnOrb() {
     p.style.animation = `pulse ${dur}s ease-in-out ${delay}s infinite alternate`;
 
     nebula.appendChild(p);
-    setTimeout(() => { if (p.parentNode) p.remove(); }, (dur + delay + 2) * 1000);
+    setTimeout(() => {
+      if (p.parentNode) p.remove();
+    }, (dur + delay + 2) * 1000);
   }
 
-  for (let i=0;i<60;i++) setTimeout(spawnParticle, i*60);
+  for (let i = 0; i < 60; i++) setTimeout(spawnParticle, i * 60);
   setInterval(spawnParticle, 350);
 })();
 
@@ -156,4 +238,48 @@ logoCard.addEventListener("click", () => {
   logoCard.classList.toggle("flipped");
   logoCard.classList.add("flipping");
   setTimeout(() => logoCard.classList.remove("flipping"), 900);
+});
+
+// === Dynamic Spotlight with Auto-Pan ===
+let spotlightX = window.innerWidth / 2;
+let spotlightY = window.innerHeight / 2;
+let targetX = spotlightX;
+let targetY = spotlightY;
+const easing = 0.05;
+let autoPanAngle = 0;
+const autoPanRadiusX = window.innerWidth / 4;
+const autoPanRadiusY = window.innerHeight / 6;
+let lastMoveTime = Date.now();
+const idleDelay = 3000;
+
+document.addEventListener("mousemove", (e) => {
+  targetX = e.clientX;
+  targetY = e.clientY;
+  lastMoveTime = Date.now();
+});
+
+function animateSpotlight() {
+  const now = Date.now();
+  if (now - lastMoveTime > idleDelay) {
+    autoPanAngle += 0.002;
+    targetX =
+      window.innerWidth / 2 + Math.cos(autoPanAngle) * autoPanRadiusX;
+    targetY =
+      window.innerHeight / 2 +
+      Math.sin(autoPanAngle * 0.6) * autoPanRadiusY;
+  }
+
+  spotlightX += (targetX - spotlightX) * easing;
+  spotlightY += (targetY - spotlightY) * easing;
+
+  dynamicSpotlight.style.left = `${spotlightX - 150}px`;
+  dynamicSpotlight.style.top = `${spotlightY - 150}px`;
+
+  requestAnimationFrame(animateSpotlight);
+}
+animateSpotlight();
+
+window.addEventListener("resize", () => {
+  spotlightX = window.innerWidth / 2;
+  spotlightY = window.innerHeight / 2;
 });

@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Inauguration Unlock</title>
-  <link href="https://fonts.googleapis.com/css2?family=Audiowide&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Orbitron:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -13,7 +13,22 @@
   <div class="spotlight-center"></div>
   <div class="spotlight-left"></div>
   <div class="spotlight-right"></div>
+  <div id="dynamicSpotlight"></div>
   <div id="sparkContainer"></div>
+  <div id="waveVisualizer">
+  <div class="bar"></div>
+  <div class="bar"></div>
+  <div class="bar"></div>
+  <div class="bar"></div>
+  <div class="bar"></div>
+  <div class="bar"></div>
+  <div class="bar"></div>
+  <div class="bar"></div>
+  <div class="bar"></div>
+  <div class="bar"></div>
+</div>
+
+
 
   <!-- Lock Screen -->
   <div id="lock-screen" class="screen active">
@@ -36,21 +51,26 @@
     </div>
   </div>
 
-  <!-- Text Screen (new, replaces club logo) -->
+  <!-- Text Screen -->
   <div id="text-screen" class="screen">
     <h1 id="presentationText" class="presentation-text">Department of Computer Science Presents</h1>
+    <h1 id="openText" class="open-text">Informatique Exhib 2k25 is Open</h1>
   </div>
 
-  <!-- Banner Screen -->
-  <div id="banner-screen" class="screen">
-    <div class="banner-wrap" id="bannerWrap">
-      <img src="Ironman.png" id="bannerImg" class="banner-img" alt="Event Poster">
-    </div>
-  </div>
+ <!-- Sounds -->
+<audio id="grantedSound" src="granted.mp3"></audio>
+<audio id="deniedSound" src="denied.mp3"></audio>
 
-  <!-- Sounds -->
-  <audio id="grantedSound" src="granted.mp3"></audio>
-  <audio id="deniedSound" src="denied.mp3"></audio>
+<!-- Background Music (plays before unlock, loops forever until stopped) -->
+<audio id="backgroundMusic" src="background.mp3" loop autoplay></audio>
+
+<!-- Opening Music (plays once after unlock) -->
+<audio id="openingMusic" src="opening.mp3"></audio>
+
+<!-- After Opening, New Background Music -->
+<audio id="afterMusic" src="after.mp3" loop></audio>
+
+
 
   <!-- libs + script -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
