@@ -44,6 +44,9 @@ const afterTracks = [
 ];
 let currentAfterIndex = 0;
 
+// >>> NEW <<< flag so skipping works only once playlist has started
+let afterPlaylistStarted = false;
+
 // Auto play bg once user clicks
 document.addEventListener("click", () => {
   if (bgMusic.paused) bgMusic.play().catch(() => {});
@@ -66,6 +69,7 @@ function fadeOut(audio, duration = 2000) {
 
 // Playlist loop
 function playAfterMusic() {
+  afterPlaylistStarted = true; // >>> NEW <<<
   afterTracks.forEach(a => { a.pause(); a.currentTime = 0; });
   const track = afterTracks[currentAfterIndex];
   track.volume = 0.7;
@@ -75,6 +79,24 @@ function playAfterMusic() {
     playAfterMusic();
   };
 }
+
+// >>> NEW <<< manual skip function
+function nextAfterTrack() {
+  if (!afterPlaylistStarted) return;
+  afterTracks.forEach(a => { a.pause(); a.currentTime = 0; });
+  currentAfterIndex = (currentAfterIndex + 1) % afterTracks.length;
+  playAfterMusic();
+}
+
+// >>> NEW <<< listen for L key (ignores typing in inputs/textareas)
+document.addEventListener("keydown", (e) => {
+  if (
+    e.key.toLowerCase() === "l" &&
+    !["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)
+  ) {
+    nextAfterTrack();
+  }
+});
 
 // ===== Unlock flow =====
 function unlock() {
@@ -88,39 +110,39 @@ function unlock() {
     fadeOut(bgMusic, 2000);
 
     // Show blackout + play video with fade-in
-blankOverlay.style.display = "flex";
-introVideo.style.display = "block";
-introVideo.currentTime = 0;
+    blankOverlay.style.display = "flex";
+    introVideo.style.display = "block";
+    introVideo.currentTime = 0;
 
-// slight async to allow CSS transition
-setTimeout(() => {
-  introVideo.style.opacity = "1";  
-  introVideo.play().catch(() => {});
-}, 50);
-
-introVideo.onended = () => {
-  // Fade out video first
-  introVideo.style.opacity = "0";
-  setTimeout(() => {
-    blankOverlay.style.display = "none";
-    introVideo.style.display = "none";
-
-    // Show text screen
-    textScreen.style.display = "block";
-
-    // Animate Open text smoothly
+    // slight async to allow CSS transition
     setTimeout(() => {
-      openTextEl.classList.add("show", "glow-pulse");
-      if (typeof confetti === "function") {
-        confetti({ particleCount: 240, spread: 120, origin: { y: 0.6 } });
-      }
-      startSpotlightFollow();
-    }, 400); // small delay after text screen shows
+      introVideo.style.opacity = "1";  
+      introVideo.play().catch(() => {});
+    }, 50);
 
-    // Start after music playlist
-    playAfterMusic();
-  }, 1200); // matches fade-out duration
-};
+    introVideo.onended = () => {
+      // Fade out video first
+      introVideo.style.opacity = "0";
+      setTimeout(() => {
+        blankOverlay.style.display = "none";
+        introVideo.style.display = "none";
+
+        // Show text screen
+        textScreen.style.display = "block";
+
+        // Animate Open text smoothly
+        setTimeout(() => {
+          openTextEl.classList.add("show", "glow-pulse");
+          if (typeof confetti === "function") {
+            confetti({ particleCount: 240, spread: 120, origin: { y: 0.6 } });
+          }
+          startSpotlightFollow();
+        }, 400); // small delay after text screen shows
+
+        // Start after music playlist
+        playAfterMusic();
+      }, 1200); // matches fade-out duration
+    };
 
   } else {
     deniedSound.currentTime = 0;
@@ -155,11 +177,6 @@ function startSpotlightFollow() {
   spotlightInterval = setInterval(moveSpotlightOnce, 1600);
   window.addEventListener("resize", moveSpotlightOnce);
 }
-
-// ===== Sparks / Nebula / Logo / Spotlight motion (unchanged from your code) =====
-// Keep your existing spark, orb, nebula, logo flip, and animateSpotlight code here
-
-
 
 // ===== Sparks =====
 function spawnSpark() {
@@ -236,7 +253,7 @@ function spawnOrb() {
   setInterval(spawnParticle, 350);
 })();
 
-// ===== Logo flip (unchanged) =====
+// ===== Logo flip =====
 const logoCard = document.getElementById("logoCard");
 logoCard.addEventListener("click", () => {
   logoCard.classList.toggle("flipped");
