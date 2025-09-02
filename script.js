@@ -29,7 +29,18 @@ const afterTracks = [
   document.getElementById("afterTrack1"),
   document.getElementById("afterTrack2"),
   document.getElementById("afterTrack3"),
-  document.getElementById("afterTrack4")
+  document.getElementById("afterTrack4"),
+  document.getElementById("afterTrack5"),
+  document.getElementById("afterTrack6"),
+  document.getElementById("afterTrack7"),
+  document.getElementById("afterTrack8"),
+  document.getElementById("afterTrack9"),
+  document.getElementById("afterTrack10"),
+  document.getElementById("afterTrack11"),
+  document.getElementById("afterTrack12"),
+  document.getElementById("afterTrack13"),
+  document.getElementById("afterTrack14"),
+  document.getElementById("afterTrack15")
 ];
 let currentAfterIndex = 0;
 
