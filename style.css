@@ -535,3 +535,23 @@ body {
     filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.6));
   }
 }
+/* Smooth video fade in/out */
+#introVideo {
+  opacity: 0;
+  transition: opacity 1.5s ease-in-out;
+}
+
+/* Fade-in for Informatique text */
+.open-text {
+  position: relative;
+  top: -50px;   /* move it up a bit (tweak as needed: -30, -50) */
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 2.5s ease, transform 2.5s ease;
+}
+
+
+.open-text.show {
+  opacity: 1;
+  transform: translateY(0);
+}

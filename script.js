@@ -8,7 +8,6 @@ const sparkContainer = document.getElementById("sparkContainer");
 const lockScreen = document.getElementById("lock-screen");
 const textScreen = document.getElementById("text-screen");
 
-const presentationTextEl = document.getElementById("presentationText");
 const openTextEl = document.getElementById("openText");
 
 const dynamicSpotlight = document.getElementById("dynamicSpotlight");
@@ -16,28 +15,30 @@ const spotlightCenter = document.querySelector(".spotlight-center");
 const spotlightLeft = document.querySelector(".spotlight-left");
 const spotlightRight = document.querySelector(".spotlight-right");
 
+// ===== Video + Blackout =====
+const blankOverlay = document.getElementById("blankOverlay");
+const introVideo = document.getElementById("introVideo");
+
 // ===== Music =====
-const bgMusic = new Audio("background.mp3"); // pre-unlock
+const bgMusic = new Audio("background.mp3");
 bgMusic.loop = true;
 bgMusic.volume = 0.6;
 
-const openingMusic = new Audio("opening.mp3"); // plays once at unlock
-openingMusic.volume = 1.0;
+// Playlist (4 after tracks)
+const afterTracks = [
+  document.getElementById("afterTrack1"),
+  document.getElementById("afterTrack2"),
+  document.getElementById("afterTrack3"),
+  document.getElementById("afterTrack4")
+];
+let currentAfterIndex = 0;
 
-const postBgMusic = new Audio("after.mp3"); // after unlock
-postBgMusic.loop = true;
-postBgMusic.volume = 0.7;
+// Auto play bg once user clicks
+document.addEventListener("click", () => {
+  if (bgMusic.paused) bgMusic.play().catch(() => {});
+}, { once: true });
 
-// Autoplay background music once user interacts (browser restriction workaround)
-document.addEventListener(
-  "click",
-  () => {
-    if (bgMusic.paused) bgMusic.play().catch(() => {});
-  },
-  { once: true }
-);
-
-// Fade out helper
+// Fade helper
 function fadeOut(audio, duration = 2000) {
   if (!audio) return;
   const step = audio.volume / (duration / 50);
@@ -52,102 +53,89 @@ function fadeOut(audio, duration = 2000) {
   }, 50);
 }
 
+// Playlist loop
+function playAfterMusic() {
+  afterTracks.forEach(a => { a.pause(); a.currentTime = 0; });
+  const track = afterTracks[currentAfterIndex];
+  track.volume = 0.7;
+  track.play().catch(() => {});
+  track.onended = () => {
+    currentAfterIndex = (currentAfterIndex + 1) % afterTracks.length;
+    playAfterMusic();
+  };
+}
+
 // ===== Unlock flow =====
 function unlock() {
   if (codeInput.value.trim().toUpperCase() === "OPEN") {
-    if (grantedSound) grantedSound.play();
+    grantedSound?.play();
 
-    // hide lock screen, show text screen
     lockScreen.classList.remove("active");
-    // Hide wave effect after unlock
-    const wave = document.getElementById("waveVisualizer");
-    if (wave) wave.classList.add("hidden");
+    document.getElementById("waveVisualizer")?.classList.add("hidden");
 
-    textScreen.classList.add("active");
-
-    const chosenEffect = "zoom-dissolve"; // options: fade-in-out, typewriter, star-wars, lens-flare, zoom-dissolve
-
-    // reset effect classes
-    presentationTextEl.classList.remove(
-      "fade-in-out",
-      "typewriter",
-      "star-wars",
-      "lens-flare",
-      "zoom-dissolve",
-      "show"
-    );
-    openTextEl.classList.remove("show", "typewriter");
-
-    // apply effect to first line
-    presentationTextEl.classList.add(chosenEffect);
-
-    // fade out bg music immediately on unlock
+    // Fade out bg
     fadeOut(bgMusic, 2000);
 
-    // play opening music slightly after fade to sync with intro effect
+    // Show blackout + play video with fade-in
+blankOverlay.style.display = "flex";
+introVideo.style.display = "block";
+introVideo.currentTime = 0;
+
+// slight async to allow CSS transition
+setTimeout(() => {
+  introVideo.style.opacity = "1";  
+  introVideo.play().catch(() => {});
+}, 50);
+
+introVideo.onended = () => {
+  // Fade out video first
+  introVideo.style.opacity = "0";
+  setTimeout(() => {
+    blankOverlay.style.display = "none";
+    introVideo.style.display = "none";
+
+    // Show text screen
+    textScreen.style.display = "block";
+
+    // Animate Open text smoothly
     setTimeout(() => {
-      openingMusic.currentTime = 0;
-      openingMusic.play().catch(() => {});
-
-      // when opening ends → start post background
-      openingMusic.onended = () => {
-        postBgMusic.currentTime = 0;
-        postBgMusic.play().catch(() => {});
-      };
-    }, 1000);
-
-    // after intro → show big OPEN text with spotlight
-    setTimeout(() => {
-      if (spotlightCenter) spotlightCenter.style.display = "none";
-      if (spotlightLeft) spotlightLeft.style.display = "none";
-      if (spotlightRight) spotlightRight.style.display = "none";
-
       openTextEl.classList.add("show", "glow-pulse");
-
       if (typeof confetti === "function") {
         confetti({ particleCount: 240, spread: 120, origin: { y: 0.6 } });
       }
-
       startSpotlightFollow();
-    }, 5200);
+    }, 400); // small delay after text screen shows
+
+    // Start after music playlist
+    playAfterMusic();
+  }, 1200); // matches fade-out duration
+};
+
   } else {
-    if (deniedSound) {
-      deniedSound.currentTime = 0;
-      deniedSound.play();
-    }
+    deniedSound.currentTime = 0;
+    deniedSound.play();
     codeInput.value = "";
     codeInput.classList.add("shake");
     setTimeout(() => codeInput.classList.remove("shake"), 900);
   }
 }
-
 unlockBtn.addEventListener("click", unlock);
-codeInput.addEventListener("keypress", (e) => {
-  if (e.key === "Enter") unlock();
-});
+codeInput.addEventListener("keypress", e => { if (e.key === "Enter") unlock(); });
 
-// ===== Spotlight follow logic =====
+// ===== Spotlight follow =====
 let spotlightInterval = null;
-
 function moveSpotlightOnce() {
   if (!openTextEl) return;
   const rect = openTextEl.getBoundingClientRect();
-
   const padX = rect.width * 0.1;
   const padY = rect.height * 0.2;
   const targetX = rect.left + padX + Math.random() * (rect.width - padX * 2);
   const targetY = rect.top + padY + Math.random() * (rect.height - padY * 2);
-
   const size = Math.max(280, Math.min(520, rect.width * 0.35));
-
-  // use transform for smoother hardware-accelerated motion
   dynamicSpotlight.style.width = `${size}px`;
   dynamicSpotlight.style.height = `${size}px`;
-  dynamicSpotlight.style.transform = `translate(${targetX - size / 2}px, ${
-    targetY - size / 2
-  }px)`;
+  dynamicSpotlight.style.transform = `translate(${targetX - size / 2}px, ${targetY - size / 2}px)`;
 }
-
 function startSpotlightFollow() {
   if (!dynamicSpotlight) return;
   dynamicSpotlight.style.opacity = "1";
@@ -156,6 +144,11 @@ function startSpotlightFollow() {
   spotlightInterval = setInterval(moveSpotlightOnce, 1600);
   window.addEventListener("resize", moveSpotlightOnce);
 }
+
+// ===== Sparks / Nebula / Logo / Spotlight motion (unchanged from your code) =====
+// Keep your existing spark, orb, nebula, logo flip, and animateSpotlight code here
+
+
 
 // ===== Sparks =====
 function spawnSpark() {
